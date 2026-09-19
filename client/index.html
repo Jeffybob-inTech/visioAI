@@ -3,86 +3,205 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#050506" />
-  <meta name="description" content="Point your camera. Say what you need. An eyes-free assistant for your world." />
+  <meta name="theme-color" content="#171126" />
+  <meta name="description" content="Point your camera. Ask Visio. Get clear help with the world in front of you." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <title>VisioAI — Your world. Out loud.</title>
+  <title>Visio — See what you can't.</title>
 </head>
 <body>
   <div id="app-shell" class="app-shell">
     <a class="skip-link" href="#toggle-assistant">Skip to assistant</a>
+
     <header class="header">
-      <a class="brand" href="/" aria-label="VisioAI home">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 16s5-9 13-9 13 9 13 9-5 9-13 9S3 16 3 16Z"/><circle cx="16" cy="16" r="4"/></svg>
-        <span>visio<span class="brand-ai">AI</span></span>
+      <a class="brand" href="/" aria-label="Visio home">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span>VISIO</span>
       </a>
-      <span class="header-note">A different way to see.</span>
-      <span id="connection" class="connection"><span class="status-dot" aria-hidden="true"></span><span id="connection-label">Getting ready</span></span>
+
+      <span id="connection" class="connection">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="connection-label">Getting ready</span>
+      </span>
     </header>
+
     <main class="landing">
       <section class="hero" aria-labelledby="hero-title">
-        <p class="eyebrow">YOUR WORLD. OUT LOUD.</p>
-        <div class="hero-art">
-          <div class="hero-glow" aria-hidden="true"></div>
-          <h1 id="hero-title" class="hero-title">visio<span>AI</span></h1>
-          <div class="hero-reflection" aria-hidden="true">visio<span>AI</span></div>
-          <div class="voice-core" aria-hidden="true"><div class="core-inner"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
-          <div class="horizon" aria-hidden="true"></div>
+        <div class="hero-copy">
+          <p class="eyebrow">YOUR CAMERA, WITH CONTEXT</p>
+          <h1 id="hero-title" class="hero-title">See what you can’t.</h1>
+          <p class="hero-description">Point your camera, ask naturally, and let Visio help with what’s in front of you.</p>
         </div>
-        <div class="hero-copy"><h2>A little more clarity.</h2><p>Point your camera. Say what you need.<br>See where the conversation takes you.</p></div>
+
+        <div class="companion-stage" aria-hidden="true">
+          <div class="ambient-orb ambient-orb-a"></div>
+          <div class="ambient-orb ambient-orb-b"></div>
+          <div class="visio-ring">
+            <span class="ring-core"></span>
+            <span class="ring-halo"></span>
+          </div>
+          <img class="miro-home" src="/miro.svg" alt="" />
+          <div class="miro-bubble">Ready when you are.</div>
+        </div>
+
         <div id="home-dock" class="home-dock">
           <div id="assistant-controls" class="assistant-controls">
-            <div id="error-box" class="error-box" role="alert" hidden><p id="error-message"></p><button id="dismiss-error" type="button" aria-label="Dismiss error">Dismiss</button></div>
+            <div id="error-box" class="error-box" role="alert" hidden>
+              <p id="error-message"></p>
+              <button id="dismiss-error" type="button" aria-label="Dismiss error">Dismiss</button>
+            </div>
+
             <button class="primary-button" id="toggle-assistant" type="button" aria-controls="camera-stage" aria-expanded="false">
-              <svg class="talk-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg>
-              <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
-              <span id="toggle-label">Talk to VisioAI</span><span class="button-arrow" aria-hidden="true">↗</span>
+              <span class="button-orb" aria-hidden="true"></span>
+              <svg class="talk-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="3" width="6" height="12" rx="3"/>
+                <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/>
+              </svg>
+              <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 5v14M16 5v14"/>
+              </svg>
+              <span id="toggle-label">Talk to Visio</span>
             </button>
-            <p class="permission-note" id="permission-note">Your camera starts when you do.</p>
+
+            <p class="permission-note" id="permission-note">Your camera starts only when you do.</p>
           </div>
         </div>
-        <section class="ideas" id="ideas" aria-label="Things to ask"><span>“Read this menu.”</span><i aria-hidden="true"></i><span>“What am I looking at?”</span><i aria-hidden="true"></i><span>“Help me find it.”</span></section>
+
+        <section class="ideas" id="ideas" aria-label="Things to ask">
+          <span>Read this menu</span>
+          <span>What am I looking at?</span>
+          <span>Help me find it</span>
+        </section>
+
+        <button id="home-session-button" class="session-link" type="button" aria-haspopup="dialog">
+          Session &amp; controls <span aria-hidden="true">↗</span>
+        </button>
       </section>
     </main>
-    <footer><p><span class="footer-spark" aria-hidden="true">✳</span>A conversation, from your perspective.</p><div class="footer-links"><button id="home-session-button" class="text-button" type="button" aria-haspopup="dialog">Session &amp; controls</button><a href="#privacy-dialog" id="privacy-link">About your data</a></div></footer>
+
+    <footer>
+      <p>Built to be useful before it is impressive.</p>
+      <a href="#privacy-dialog" id="privacy-link">About your data</a>
+    </footer>
   </div>
 
   <section id="camera-stage" class="camera-stage" aria-label="Camera conversation" hidden inert>
-    <div class="viewer" id="viewer">
+    <div class="viewer" id="viewer" data-assistant-state="idle">
       <video id="camera" autoplay playsinline muted aria-label="Live rear camera preview"></video>
       <div class="camera-shade" aria-hidden="true"></div>
+
       <div class="viewer-top">
-        <div class="live-brand"><span>visio<span class="brand-ai">AI</span></span><span id="camera-state" class="camera-state">Camera off</span></div>
-        <button id="live-session-button" class="session-button" type="button" aria-haspopup="dialog"><span id="live-session-label">Session</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
+        <div class="live-brand">
+          <span class="brand-mark mini" aria-hidden="true"><span></span></span>
+          <span>VISIO</span>
+        </div>
+
+        <div class="top-actions">
+          <span id="camera-state" class="camera-state">Camera off</span>
+          <button id="live-session-button" class="session-button" type="button" aria-haspopup="dialog">
+            <span id="live-session-label">Session</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="viewfinder" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="scan-line"></span></div>
-      <div class="camera-placeholder" id="camera-placeholder"><div class="connecting-ring" aria-hidden="true"></div><p>A moment to connect.</p><span>Allow camera and microphone access when asked.</span></div>
+
+      <div class="camera-placeholder" id="camera-placeholder">
+        <div class="placeholder-orb" aria-hidden="true"></div>
+        <p>Getting the camera ready.</p>
+        <span>Allow camera and microphone access when asked.</span>
+      </div>
+
+      <div class="focus-guide" aria-hidden="true">
+        <i></i><i></i><i></i><i></i>
+        <span class="scan-line"></span>
+      </div>
+
+      <div class="miro-live" aria-hidden="true">
+        <img src="/miro.svg" alt="" />
+        <span class="miro-live-glow"></span>
+      </div>
+
       <div class="live-bottom">
         <div class="viewer-bottom">
-          <div class="assistant-state"><span class="pulse" aria-hidden="true"></span><span id="status" role="status" aria-live="polite">Ready when you are</span><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
-          <p id="caption" class="caption" aria-live="polite">What would you like a hand with?</p>
+          <div class="assistant-state">
+            <span class="state-orb" aria-hidden="true"></span>
+            <span id="status" role="status" aria-live="polite">Ready when you are</span>
+            <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          </div>
+
+          <div class="caption-card">
+            <p id="caption" class="caption" aria-live="polite">What would you like a hand with?</p>
+          </div>
         </div>
+
         <div id="live-dock" class="live-dock"></div>
       </div>
     </div>
   </section>
 
   <dialog id="session-dialog" class="session-dialog" aria-labelledby="session-title">
-    <div class="dialog-header"><div><p class="eyebrow">RIGHT HERE WITH YOU</p><h2 id="session-title">Your session.</h2></div><button id="close-session" class="close-button" type="button" aria-label="Close session panel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="dialog-header">
+      <div>
+        <p class="eyebrow">YOUR SESSION</p>
+        <h2 id="session-title">Keep the context.</h2>
+      </div>
+      <button id="close-session" class="close-button" type="button" aria-label="Close session panel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
     <div class="companion">
-      <section class="goal-card"><p class="eyebrow">THE FOCUS</p><p id="goal-text">What would you like a hand with?</p><p id="goal-help" class="muted">I’ll keep it in mind as we go.</p></section>
-      <div class="quick-controls" id="quick-controls" hidden><button id="look-button" type="button">Look again</button><button id="mute-button" type="button" aria-pressed="false">Mute mic</button></div>
+      <section class="goal-card">
+        <div class="goal-card-miro" aria-hidden="true"><img src="/miro.svg" alt="" /></div>
+        <div>
+          <p class="eyebrow">CURRENT FOCUS</p>
+          <p id="goal-text">What would you like a hand with?</p>
+          <p id="goal-help" class="muted">I’ll keep it in mind as we go.</p>
+        </div>
+      </section>
+
+      <div class="quick-controls" id="quick-controls" hidden>
+        <button id="look-button" type="button">Look again</button>
+        <button id="mute-button" type="button" aria-pressed="false">Mute mic</button>
+      </div>
+
       <form id="message-form" class="message-form" hidden>
-        <label for="message-input">Or type a message</label>
-        <div class="message-row"><input id="message-input" maxlength="1000" autocomplete="off" placeholder="What would you like to know?" /><button type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div>
+        <label for="message-input">Type instead</label>
+        <div class="message-row">
+          <input id="message-input" maxlength="1000" autocomplete="off" placeholder="Ask Visio anything…" />
+          <button type="submit" aria-label="Send message">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>
+          </button>
+        </div>
         <button id="search-button" class="text-button" type="button">Search web <span aria-hidden="true">↗</span></button>
       </form>
-      <section id="places-section" class="places-section" hidden aria-label="Nearby places"><h3>Nearby places</h3><ul id="places-list"></ul><span class="maps-attribution">Google Maps</span></section>
-      <section id="search-section" class="places-section" hidden aria-label="Web search results"><h3>Web search</h3><p id="search-answer"></p><ul id="search-sources"></ul><iframe id="search-suggestions" title="Google Search suggestions" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" hidden></iframe></section>
-      <details id="conversation-details" class="conversation-details"><summary>Conversation <span id="message-count">0</span></summary><ol id="transcript" class="transcript" aria-label="Conversation history"></ol><p id="empty-transcript" class="muted">Our conversation will appear here.</p></details>
-      <div class="session-controls"><button id="shake-button" type="button" aria-pressed="false">Enable shake to wake</button><p id="shake-help">Optional. Works while this page is open and your phone is awake.</p><button id="forget-button" class="text-button" type="button" disabled>Forget this session</button></div>
+
+      <section id="places-section" class="places-section" hidden aria-label="Nearby places">
+        <h3>Nearby places</h3>
+        <ul id="places-list"></ul>
+        <span class="maps-attribution">Google Maps</span>
+      </section>
+
+      <section id="search-section" class="places-section" hidden aria-label="Web search results">
+        <h3>Web search</h3>
+        <p id="search-answer"></p>
+        <ul id="search-sources"></ul>
+        <iframe id="search-suggestions" title="Google Search suggestions" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" hidden></iframe>
+      </section>
+
+      <details id="conversation-details" class="conversation-details">
+        <summary>Conversation <span id="message-count">0</span></summary>
+        <ol id="transcript" class="transcript" aria-label="Conversation history"></ol>
+        <p id="empty-transcript" class="muted">Your conversation will appear here.</p>
+      </details>
+
+      <div class="session-controls">
+        <button id="shake-button" type="button" aria-pressed="false">Enable shake to wake</button>
+        <p id="shake-help">Optional. Works while this page is open and your phone is awake.</p>
+        <button id="forget-button" class="text-button" type="button" disabled>Forget this session</button>
+      </div>
     </div>
   </dialog>
+
   <dialog id="privacy-dialog" class="privacy-dialog" aria-labelledby="privacy-title">
     <h2 id="privacy-title">About your data.</h2>
     <p>Your microphone sends audio to ElevenLabs while the assistant is active. When it needs to look, a camera frame and your goal go through our server to Google Gemini. Web lookups send your search query to Google. Nearby search shares location with Google only when you ask to find a place and grant permission.</p>
@@ -90,6 +209,8 @@
     <p>Camera guidance is for framing objects and reading information. It is not a mobility or hazard-detection aid.</p>
     <form method="dialog"><button class="primary-button">Got it</button></form>
   </dialog>
+
+  <script src="/ui.js" defer></script>
   <script type="module" src="/index.js"></script>
 </body>
 </html>
