@@ -1,0 +1,335 @@
+/*
+  Minimal Visio opening screen
+  ----------------------------
+  The functional camera/session UI is left alone. These rules only collapse
+  the non-immersive home view down to VISIO + glow + Miro + one circular button.
+*/
+
+body:not([data-immersive="true"]) {
+  overflow: hidden;
+}
+
+body:not([data-immersive="true"]) .app-shell {
+  width: 100%;
+  min-height: 100svh;
+  padding: 0 clamp(24px, 6vw, 58px);
+}
+
+body:not([data-immersive="true"]) .header {
+  min-height: 96px;
+  position: relative;
+  z-index: 5;
+}
+
+body:not([data-immersive="true"]) .brand {
+  font-size: 17px;
+  letter-spacing: .25em;
+}
+
+body:not([data-immersive="true"]) .brand-mark {
+  width: 34px;
+  height: 34px;
+}
+
+body:not([data-immersive="true"]) .connection,
+body:not([data-immersive="true"]) .hero-copy,
+body:not([data-immersive="true"]) .miro-bubble,
+body:not([data-immersive="true"]) .permission-note,
+body:not([data-immersive="true"]) .ideas,
+body:not([data-immersive="true"]) .session-link,
+body:not([data-immersive="true"]) footer {
+  display: none !important;
+}
+
+body:not([data-immersive="true"]) .landing {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+body:not([data-immersive="true"]) .hero {
+  position: relative;
+  width: 100%;
+  height: calc(100svh - 96px);
+  min-height: 520px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+body:not([data-immersive="true"]) .companion-stage {
+  position: relative;
+  width: min(430px, 96vw);
+  height: min(430px, 62svh);
+  min-height: 330px;
+  margin: -44px auto 0;
+  display: block;
+  isolation: isolate;
+}
+
+/* The real button replaces the old decorative ring. */
+body:not([data-immersive="true"]) .visio-ring {
+  display: none !important;
+}
+
+body:not([data-immersive="true"]) .ambient-orb {
+  pointer-events: none;
+  filter: blur(58px);
+}
+
+body:not([data-immersive="true"]) .ambient-orb-a {
+  width: 260px;
+  height: 210px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-61%, -52%);
+  background: rgba(133, 74, 255, .30);
+  opacity: .88;
+}
+
+body:not([data-immersive="true"]) .ambient-orb-b {
+  width: 205px;
+  height: 175px;
+  left: 50%;
+  right: auto;
+  top: 50%;
+  transform: translate(-6%, -42%);
+  background: rgba(86, 215, 255, .12);
+  opacity: .66;
+}
+
+body:not([data-immersive="true"]) .home-dock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  margin: 0;
+  transform: translate(-64%, -50%);
+}
+
+body:not([data-immersive="true"]) .assistant-controls {
+  width: auto;
+}
+
+body:not([data-immersive="true"]) .home-dock .primary-button {
+  position: relative;
+  width: 142px;
+  height: 142px;
+  min-width: 142px;
+  min-height: 142px;
+  padding: 0;
+  border-radius: 50%;
+  overflow: visible;
+
+  background:
+    radial-gradient(circle at 50% 50%, rgba(139, 83, 255, .14) 0 48%, transparent 49%),
+    rgba(14, 11, 24, .70);
+
+  border: 2px solid rgba(174, 117, 255, .98);
+
+  box-shadow:
+    0 0 0 9px rgba(151, 91, 255, .06),
+    0 0 36px rgba(129, 72, 255, .58),
+    0 0 82px rgba(100, 52, 230, .34),
+    inset 0 0 34px rgba(95, 216, 255, .10);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  transition:
+    transform .18s ease,
+    box-shadow .22s ease,
+    border-color .22s ease;
+}
+
+body:not([data-immersive="true"]) .home-dock .primary-button::before {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border-radius: 50%;
+  border: 3px solid rgba(174, 112, 255, .95);
+  border-right-color: #66e3ff;
+  border-bottom-color: #66e3ff;
+  box-shadow:
+    0 0 18px rgba(170, 105, 255, .48),
+    inset 0 0 18px rgba(102, 227, 255, .08);
+  animation: minimal-orbit 9s linear infinite;
+}
+
+body:not([data-immersive="true"]) .home-dock .primary-button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -24px;
+  width: 96px;
+  height: 26px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(116, 64, 232, .24);
+  filter: blur(16px);
+  pointer-events: none;
+}
+
+body:not([data-immersive="true"]) .home-dock .primary-button:hover:not(:disabled) {
+  transform: scale(1.035);
+  border-color: rgba(199, 158, 255, 1);
+  box-shadow:
+    0 0 0 10px rgba(151, 91, 255, .075),
+    0 0 42px rgba(142, 82, 255, .68),
+    0 0 94px rgba(96, 52, 225, .40),
+    inset 0 0 38px rgba(95, 216, 255, .12);
+}
+
+body:not([data-immersive="true"]) .home-dock .primary-button:active:not(:disabled) {
+  transform: scale(.975);
+}
+
+body:not([data-immersive="true"]) .home-dock .button-orb {
+  position: relative;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  background:
+    radial-gradient(circle at 38% 32%, #e8d8ff 0 6%, #bb8dff 26%, #8b55f7 58%, #6332c7 100%);
+  box-shadow:
+    0 0 18px rgba(185, 133, 255, .78),
+    0 0 38px rgba(134, 80, 244, .55);
+}
+
+body:not([data-immersive="true"]) .home-dock .talk-icon,
+body:not([data-immersive="true"]) .home-dock .pause-icon {
+  display: none !important;
+}
+
+/* Leave the live text in the DOM for screen readers / index.js. */
+body:not([data-immersive="true"]) #toggle-label {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+body:not([data-immersive="true"]) .miro-home {
+  position: absolute;
+  z-index: 4;
+  width: 118px;
+  height: auto;
+  left: calc(50% + 42px);
+  right: auto;
+  top: 50%;
+  transform: translateY(-38%);
+  filter:
+    drop-shadow(0 16px 24px rgba(35, 11, 65, .42))
+    drop-shadow(0 0 14px rgba(143, 87, 255, .22));
+  animation: minimal-float 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Subtle blue attention marks on the existing Miro art stay intact. */
+body:not([data-immersive="true"]) .error-box {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: max(26px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 36px));
+  margin: 0;
+}
+
+/* Three-second discovery hint. */
+.start-hint-toast {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: max(28px, calc(env(safe-area-inset-bottom) + 18px));
+  min-height: 42px;
+  padding: 0 17px;
+  border: 1px solid rgba(218, 198, 255, .18);
+  border-radius: 999px;
+  background: rgba(27, 20, 41, .86);
+  color: rgba(245, 239, 255, .92);
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.28),
+    0 0 20px rgba(131, 77, 232, .12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  opacity: 0;
+  transform: translate(-50%, 14px) scale(.97);
+  pointer-events: none;
+  transition: opacity .24s ease, transform .24s ease;
+}
+
+.start-hint-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+  pointer-events: auto;
+}
+
+body[data-immersive="true"] .start-hint-toast {
+  display: none;
+}
+
+@keyframes minimal-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes minimal-float {
+  0%, 100% { transform: translateY(-38%); }
+  50% { transform: translateY(calc(-38% - 8px)); }
+}
+
+@media (max-width: 600px) {
+  body:not([data-immersive="true"]) .app-shell {
+    padding: 0 28px;
+  }
+
+  body:not([data-immersive="true"]) .header {
+    min-height: 88px;
+  }
+
+  body:not([data-immersive="true"]) .hero {
+    height: calc(100svh - 88px);
+    min-height: 500px;
+  }
+
+  body:not([data-immersive="true"]) .companion-stage {
+    width: min(360px, 100vw);
+    height: min(390px, 60svh);
+    margin-top: -60px;
+  }
+
+  body:not([data-immersive="true"]) .home-dock .primary-button {
+    width: 132px;
+    height: 132px;
+    min-width: 132px;
+    min-height: 132px;
+  }
+
+  body:not([data-immersive="true"]) .miro-home {
+    width: 106px;
+    left: calc(50% + 34px);
+  }
+}
+
+@media (max-height: 650px) {
+  body:not([data-immersive="true"]) .companion-stage {
+    transform: scale(.88);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-immersive="true"]) .home-dock .primary-button::before,
+  body:not([data-immersive="true"]) .miro-home {
+    animation: none !important;
+  }
+}
