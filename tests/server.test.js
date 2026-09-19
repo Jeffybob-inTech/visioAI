@@ -14,7 +14,7 @@ const scene = {
     { name: 'Enchiladas de Pollo', translatedName: 'Chicken enchiladas', price: 12.5, currency: 'USD', reason: 'Menu explicitly says picante suave.', location: 'Lower half', details: null },
   ], answerConfidence: 0.9, uncertainty: null,
 };
-const env = { GEMINI_API_KEY: 'test-secret-gemini', ELEVENLABS_API_KEY: 'test-secret-eleven', ELEVENLABS_AGENT_ID: 'test-agent', GOOGLE_PLACES_API_KEY: 'test-secret-places', CLIENT_ORIGINS: 'https://visio.example' };
+const env = { GEMINI_API_KEY: 'test-secret-gemini', ELEVENLABS_API_KEY: 'test-secret-eleven', ELEVENLABS_AGENT_ID: 'test-agent', ELEVENLABS_AUTO_SYNC: 'false', GOOGLE_PLACES_API_KEY: 'test-secret-places', CLIENT_ORIGINS: 'https://visio.example' };
 async function server(t, fetchImpl, overrides = {}) {
   const instance = createApp({ env: { ...env, ...overrides }, fetchImpl }).listen(0, '127.0.0.1');
   await new Promise(resolve => instance.once('listening', resolve));
@@ -107,7 +107,7 @@ test('voice endpoint returns only ephemeral conversation token and disables cach
 
 test('missing configuration reports capabilities and a useful error', async t => {
   const call = await server(t, async () => { throw new Error('must not call'); }, { GEMINI_API_KEY: '', ELEVENLABS_API_KEY: '', GOOGLE_PLACES_API_KEY: '' });
-  assert.deepEqual(await (await call('/api/config')).json(), { capabilities: { vision: false, voice: false, places: false } });
+  assert.deepEqual(await (await call('/api/config')).json(), { capabilities: { vision: false, search: false, voice: false, places: false } });
   assert.equal((await call('/api/elevenlabs-token')).status, 503);
   assert.equal((await call('/api/vision', { image })).status, 503);
   assert.equal((await call('/api/health')).status, 200);
@@ -128,7 +128,7 @@ test('Places preserves attribution and does not pretend to know menu prices', as
 });
 
 test('agent setup registers every client tool as a blocking tool and waits for spoken camera guidance', () => {
-  assert.deepEqual(TOOL_CONFIGS.map(tool => tool.name), ['set_goal', 'inspect_scene', 'recall_memory', 'find_places', 'pause_assistant']);
+  assert.deepEqual(TOOL_CONFIGS.map(tool => tool.name), ['set_goal', 'inspect_scene', 'recall_memory', 'find_places', 'search_web', 'pause_assistant']);
   assert.ok(TOOL_CONFIGS.every(tool => tool.expects_response));
   assert.equal(TOOL_CONFIGS.find(tool => tool.name === 'inspect_scene').execution_mode, 'post_tool_speech');
   const config = agentConfig(['test-tool']);
@@ -142,4 +142,51 @@ test('vision uses schema constrained output, untrusted-document instructions, an
   assert.equal(payload.generationConfig.responseMimeType, 'application/json');
   assert.match(payload.systemInstruction.parts[0].text, /untrusted data/);
   assert.equal(payload.contents.length, 1);
+});
+
+test('web search enables grounding and returns only actual provider source links', async t => {
+  let outgoing;
+  const call = await server(t, async (url, init) => {
+    outgoing = JSON.parse(init.body);
+    return Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: 'The museum opens at 10 a.m.' }] }, groundingMetadata: {
+      groundingChunks: [{ web: { uri: 'https://museum.example/hours', title: 'Museum hours' } }, { web: { uri: 'javascript:alert(1)', title: 'Bad link' } }],
+      searchEntryPoint: { renderedContent: '<div>Google Search</div>' },
+    } }] });
+  });
+  const response = await call('/api/search', { query: 'Museum opening hours today' });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.deepEqual(outgoing.tools, [{ googleSearch: {} }]);
+  assert.equal(outgoing.contents[0].parts[0].text, 'Museum opening hours today');
+  assert.deepEqual(result.sources, [{ url: 'https://museum.example/hours', title: 'Museum hours' }]);
+  assert.equal(result.searchSuggestions, '<div>Google Search</div>');
+  assert.ok(!JSON.stringify(result).includes(env.GEMINI_API_KEY));
+});
+
+test('web search rejects ungrounded or incomplete answers', async t => {
+  for (const candidate of [
+    { content: { parts: [{ text: 'A confident answer with no search sources.' }] } },
+    { finishReason: 'MAX_TOKENS', content: { parts: [{ text: 'Partial answer' }] }, groundingMetadata: { groundingChunks: [{ web: { uri: 'https://example.com' } }] } },
+  ]) {
+    const call = await server(t, async () => Response.json({ candidates: [candidate] }));
+    const response = await call('/api/search', { query: 'Look up the menu' });
+    assert.equal(response.status, 502); assert.equal((await response.json()).error.code, 'UNGROUNDED_SEARCH');
+  }
+});
+
+test('invalid searches and missing search credentials never call the provider', async t => {
+  let calls = 0;
+  const call = await server(t, async () => { calls++; throw new Error('must not call'); }, { GEMINI_API_KEY: '' });
+  assert.equal((await call('/api/search', { query: '' })).status, 400);
+  assert.equal((await call('/api/search', { query: 'x'.repeat(501) })).status, 400);
+  assert.equal((await call('/api/search', { query: 'opening hours' })).status, 503);
+  assert.equal(calls, 0);
+});
+
+test('provider permission and model failures explain the configuration to check', async t => {
+  for (const [status, hint] of [[403, /GEMINI_API_KEY.*restrictions/], [404, /GEMINI_MODEL/], [429, /quota or rate limit/]]) {
+    const call = await server(t, async () => Response.json({}, { status }));
+    const response = await call('/api/vision', { image });
+    assert.match((await response.json()).error.message, hint);
+  }
 });

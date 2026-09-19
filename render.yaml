@@ -22,4 +22,4 @@ services:
       - key: ELEVENLABS_AGENT_ID
         sync: false
       - key: CLIENT_ORIGINS
-        sync: false
+        value: https://visioai-delta.vercel.app

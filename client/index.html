@@ -74,6 +74,7 @@
           <form id="message-form" class="message-form" hidden>
             <label for="message-input">Or type a message</label>
             <div class="message-row"><input id="message-input" maxlength="1000" autocomplete="off" placeholder="What would you like to know?" /><button type="submit" aria-label="Send message">↑</button></div>
+            <button id="search-button" class="text-button" type="button">Search web</button>
           </form>
           <details id="conversation-details" class="conversation-details">
             <summary>Conversation <span id="message-count">0</span></summary>
@@ -82,6 +83,10 @@
           </details>
           <section id="places-section" class="places-section" hidden aria-label="Nearby places">
             <h2>Nearby places</h2><ul id="places-list"></ul><span class="maps-attribution">Google Maps</span>
+          </section>
+          <section id="search-section" class="places-section" hidden aria-label="Web search results">
+            <h2>Web search</h2><p id="search-answer"></p><ul id="search-sources"></ul>
+            <iframe id="search-suggestions" title="Google Search suggestions" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" hidden></iframe>
           </section>
           <div class="session-controls">
             <button id="shake-button" type="button" aria-pressed="false">Enable shake to wake</button>
@@ -95,7 +100,7 @@
   </div>
   <dialog id="privacy-dialog" aria-labelledby="privacy-title">
     <h2 id="privacy-title">About your data</h2>
-    <p>Your microphone sends audio to ElevenLabs while the assistant is active. When it needs to look, a camera frame and your goal go through our server to Google Gemini. Nearby search shares location with Google only when you ask to find a place and grant permission.</p>
+    <p>Your microphone sends audio to ElevenLabs while the assistant is active. When it needs to look, a camera frame and your goal go through our server to Google Gemini. Web lookups send your search query to Google. Nearby search shares location with Google only when you ask to find a place and grant permission.</p>
     <p>This app keeps goals and conversation context in this tab’s memory and does not save images, audio, or transcripts on its server. Pause keeps that context; “Forget this session” clears it here. Provider retention follows your service configuration and their policies.</p>
     <p>Camera guidance is for framing objects and reading information. It is not a mobility or hazard-detection aid.</p>
     <form method="dialog"><button class="primary-button">Got it</button></form>

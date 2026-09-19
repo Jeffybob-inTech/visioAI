@@ -2,12 +2,27 @@
 
 An eyes-free camera assistant that remembers a goal and helps with the next step. Vanilla JavaScript client on **Vercel**, Express API on **Render**, **ElevenLabs** for conversation, and **Gemini** for visual perception. No database or React.
 
+## Fix for the existing deployments
+
+Replace the repository files with this update, then redeploy Render and Vercel. Your existing deployment addresses are already configured:
+
+- Client: https://visioai-delta.vercel.app/
+- API: https://visioai-xqse.onrender.com
+
+On Render, keep `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, and your existing `ELEVENLABS_AGENT_ID`. Set `CLIENT_ORIGINS=https://visioai-delta.vercel.app`. The ElevenLabs key must allow reading/writing Agents and tools and initiating conversations. On the first connection after a server restart, the server attaches all six client tools, repairs their response settings, updates the VisioAI prompt and required client events, and adds the session context variable. It preserves your selected voice, LLM, privacy, authentication, and unrelated tools. This can take up to a minute; subsequent connections reuse the completed setup.
+
+You can also run `npm run agent:sync` with those variables locally or in the Render shell. An existing agent is updated instead of rejected. Set `ELEVENLABS_AUTO_SYNC=false` only if you manage the same tools and prompt manually. Keep this dedicated VisioAI agent connected to one server deployment to avoid competing setup changes.
+
+The old client callbacks did not register tools on the hosted agent. The old **Look again** button only sent a chat message, and there was no general web lookup tool. Now the button directly captures a frame, spoken requests can call the registered tools, and `search_web` uses Gemini with Google Search grounding. It requires your existing Gemini key and a search-compatible model; there is no separate web search key. Results without actual source links are rejected. Type a query and click **Search web** to test the lookup directly.
+
+Nearby searches with device location additionally need `GOOGLE_PLACES_API_KEY` with Places API (New) enabled. Without it, give the agent a city/area and ask for a web search instead. Provider failures now identify status codes and relevant configuration without exposing keys.
+
 ## Start here
 
 1. Install **Node.js 24 LTS** and open this folder in VS Code. Keep `client/` and `server/` inside the same repository.
 2. Run `npm install` from the repository root.
 3. Copy `.env.example` to `.env` in the root. Add `GEMINI_API_KEY` and `ELEVENLABS_API_KEY`. Never commit `.env`.
-4. Run `npm run agent:create`. This creates the five ElevenLabs client tools, creates a private agent, and writes its ID to your local `.env`. Your ElevenLabs API key needs permission to create tools/agents and initiate conversations. You can set `ELEVENLABS_VOICE_ID` beforehand to choose a voice.
+4. Run `npm run agent:create`. This creates the six ElevenLabs client tools, creates a private agent (or repairs your existing agent), and writes its ID to your local `.env`. Your ElevenLabs API key needs permission to create tools/agents and initiate conversations. You can set `ELEVENLABS_VOICE_ID` beforehand to choose a voice.
 5. Run `npm run dev`. Open **http://127.0.0.1:5173** on this computer. The frontend proxies `/api` to port 3001.
 6. Press **Start VisioAI**, grant camera and microphone permission, and state a goal.
 
@@ -17,7 +32,7 @@ The setup script can be inspected without making any API calls:
 npm run agent:create -- --dry-run
 ```
 
-If tool creation fails partway through, the script checkpoints the newly created IDs in `.agent-setup.json`. Re-run to resume. It does not modify an existing agent. Keep that file local. If a create request times out after being accepted, inspect ElevenLabs before retrying to avoid duplicates.
+If tool creation fails partway through, the script checkpoints the newly created IDs in `.agent-setup.json`. Re-run to resume. When ELEVENLABS_AGENT_ID is set, it synchronizes the existing agent instead of creating another one. Keep that file local. If a create request times out after being accepted, inspect ElevenLabs before retrying to avoid duplicates.
 
 ## Deploy exactly this repository
 
@@ -43,8 +58,8 @@ Set these **Render environment variables**:
 | `GEMINI_API_KEY` | Your Google AI Studio key |
 | `GEMINI_MODEL` | `gemini-3.8-flash`, or a vision-capable Gemini model available to your project |
 | `ELEVENLABS_API_KEY` | Your ElevenLabs secret key |
-| `ELEVENLABS_AGENT_ID` | The agent ID created locally |
-| `CLIENT_ORIGINS` | Your exact Vercel origin, such as `https://visioai.vercel.app` |
+| `ELEVENLABS_AGENT_ID` | Your existing agent ID, or the ID created locally |
+| `CLIENT_ORIGINS` | `https://visioai-delta.vercel.app` |
 | `TRUST_PROXY` | `1` for Render |
 | `NODE_ENV` | `production` |
 | `GOOGLE_PLACES_API_KEY` | Optional; enables nearby search |
@@ -68,7 +83,7 @@ Import the **same GitHub repository**:
 
 Copy the resulting Vercel origin into Render's `CLIENT_ORIGINS`. Multiple origins are comma-separated. Preview deployment domains must be added explicitly. Do not use `*` or a wildcard matching every Vercel site.
 
-Open the Vercel HTTPS URL on your phone. Camera/microphone do not work on an ordinary `http://192.168...` LAN address. `/api/health` on Render verifies server liveness, not provider credentials; `/api/config` verifies that required variables exist, and starting a real session verifies credentials.
+Open the Vercel HTTPS URL on your phone. Camera/microphone do not work on an ordinary `http://192.168...` LAN address. `/api/health` on Render verifies server liveness, not provider credentials; `/api/config` verifies that required variables exist, and starting a real session verifies ElevenLabs access. A scan and a web search verify the Gemini key and selected models.
 
 ## What is implemented
 
@@ -79,6 +94,7 @@ Open the Vercel HTTPS URL on your phone. Camera/microphone do not work on an ord
 - Camera guidance followed by another scan after speech and a repositioning delay. Only one scan can be in flight. Up to five automatic scans per user turn prevent runaway retries.
 - Follow-ups through `recall_memory` without another image upload.
 - Wake/sleep/scan earcons, optional vibration, optional shake wake/sleep, screen wake lock when supported, and a large pause control.
+- Google Search grounded web lookups through Gemini, source links, search attribution, and bounded session search memory.
 - On-demand nearby search through Places API (New), attribution, and Google Maps links. The API must be enabled in the Google Cloud project with billing and a correctly restricted key.
 - Exact CORS origins, request/body limits, input validation, provider timeouts, cancellation of pending HTTP requests, and sanitized API errors.
 
@@ -86,7 +102,7 @@ There are no fabricated AI answers or hidden demonstration responses. Without re
 
 ## ElevenLabs tools
 
-The setup script contains the complete agent prompt and definitions. To configure an existing agent manually, run the dry-run command and copy its definitions. Register these **client** tools and enable **Wait for response**:
+`server/agent-config.js` contains the complete agent prompt and definitions; `server/agent.js` synchronizes them with ElevenLabs. To configure an existing agent manually, run the dry-run command and copy its definitions. Register these **client** tools and enable **Wait for response**:
 
 | Tool | Purpose |
 | --- | --- |
@@ -94,6 +110,7 @@ The setup script contains the complete agent prompt and definitions. To configur
 | `inspect_scene` | Take a fresh frame and return Gemini evidence |
 | `recall_memory` | Retrieve prior observations and conversation |
 | `find_places` | Request location and search nearby places |
+| `search_web` | Look up facts with Google Search and return sources |
 | `pause_assistant` | Stop camera and conversation |
 
 Use the exact tool names. `inspect_scene` uses `post_tool_speech` execution and a 45-second timeout. Enable the `client_tool_call`, `user_transcript`, `agent_response`, `audio`, `interruption`, `conversation_initiation_metadata`, and `ping` client events. Add the `session_context` dynamic variable with `{}` as its default. Keep authentication enabled; the server issues temporary conversation tokens.
@@ -109,7 +126,9 @@ Open `docs/test-menu.html` on a second screen or print its two pages. This is a 
 5. Ask “Which is spicier?” The menu explicitly labels the pollo very spicy and enchiladas mild.
 6. Ask “Does the pollo come with rice?” The visible text says rice and beans.
 7. Say “Pause.” Verify the camera/microphone stop. Resume and ask about the earlier menu.
-8. Deny camera permission, deny motion permission, turn off the network, and switch apps. Verify readable errors, a working fallback button, and no unexpected restart.
+8. Ask “Look up the restaurant online” or type a query and choose **Search web**. Verify source links appear.
+9. Press **Look again** and verify an actual scan occurs even without another spoken request.
+10. Deny camera permission, deny motion permission, turn off the network, and switch apps. Verify readable errors, a working fallback button, and no unexpected restart.
 
 Run `npm test` for API, provider-error, input-validation, CORS, memory, and agent-configuration tests. Run `npm run build` for the production client. Provider responses in automated tests are mocked; these tests cannot prove live model accuracy or latency. A real phone test with your keys is still required, particularly Safari microphone behavior, interruptions, shake thresholds, and noisy-room performance.
 
@@ -124,4 +143,4 @@ Run `npm test` for API, provider-error, input-validation, CORS, memory, and agen
 
 ## Reference documentation
 
-Integration contracts were checked against [ElevenLabs JavaScript SDK](https://elevenlabs.io/docs/eleven-agents/libraries/java-script), [client tools](https://elevenlabs.io/docs/eleven-agents/customization/tools/client-tools), [agent creation](https://elevenlabs.io/docs/api-reference/agents/create), [tool creation](https://elevenlabs.io/docs/api-reference/tools/create), [Gemini generateContent](https://ai.google.dev/api/generate-content), [Places Text Search](https://developers.google.com/maps/documentation/places/web-service/text-search), [Render Blueprints](https://render.com/docs/blueprint-spec), and [Vercel project configuration](https://vercel.com/docs/project-configuration).
+Integration contracts were checked against [ElevenLabs JavaScript SDK](https://elevenlabs.io/docs/eleven-agents/libraries/java-script), [client tools](https://elevenlabs.io/docs/eleven-agents/customization/tools/client-tools), [agent creation](https://elevenlabs.io/docs/api-reference/agents/create), [tool creation](https://elevenlabs.io/docs/api-reference/tools/create), [Gemini generateContent](https://ai.google.dev/api/generate-content), [Google Search grounding](https://ai.google.dev/gemini-api/docs/google-search), [ElevenLabs agent updates](https://elevenlabs.io/docs/api-reference/agents/update), [Places Text Search](https://developers.google.com/maps/documentation/places/web-service/text-search), [Render Blueprints](https://render.com/docs/blueprint-spec), and [Vercel project configuration](https://vercel.com/docs/project-configuration).

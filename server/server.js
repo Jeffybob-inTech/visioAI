@@ -6,29 +6,11 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { buildVisionPayload, parseImage, visionRequestSchema, visionResultSchema } from './vision.js';
+import { ApiError, providerJSON } from './provider.js';
+import { createAgentPreparer } from './agent.js';
+import { buildSearchPayload, readSearchResult } from './search.js';
 
 dotenv.config({ path: fileURLToPath(new URL('../.env', import.meta.url)), quiet: true });
-
-class ApiError extends Error {
-  constructor(status, code, message) { super(message); Object.assign(this, { status, code }); }
-}
-
-// Both the fetch and body read are bounded. Provider bodies and secrets are never logged.
-async function providerJSON(fetchImpl, url, options, service) {
-  try {
-    const response = await fetchImpl(url, { ...options, signal: options.signal });
-    if (!response.ok) {
-      await response.body?.cancel();
-      if (response.status === 429) throw new ApiError(429, 'PROVIDER_BUSY', `${service} is busy. Please try again shortly.`);
-      throw new ApiError(502, 'PROVIDER_ERROR', `${service} could not complete the request. Check the server's API configuration.`);
-    }
-    return await response.json();
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    if (options.signal?.aborted) throw new ApiError(504, 'PROVIDER_TIMEOUT', `${service} took too long. Please try again.`);
-    throw new ApiError(502, 'PROVIDER_UNAVAILABLE', `${service} is unavailable. Please try again.`);
-  }
-}
 
 function requestSignal(req, res, timeoutMs = 25_000) {
   const controller = new AbortController();
@@ -39,10 +21,11 @@ function requestSignal(req, res, timeoutMs = 25_000) {
 
 export function createApp({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
   const app = express();
+  const prepareAgent = createAgentPreparer({ env, fetchImpl });
   app.disable('x-powered-by');
   const proxy = Number(env.TRUST_PROXY || 0);
   app.set('trust proxy', Number.isInteger(proxy) && proxy >= 0 ? proxy : 0);
-  const origins = new Set((env.CLIENT_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+  const origins = new Set((env.CLIENT_ORIGINS || 'https://visioai-delta.vercel.app,http://localhost:5173,http://127.0.0.1:5173')
     .split(',').map(value => value.trim().replace(/\/$/, '')).filter(Boolean));
   app.use(cors({
     origin(origin, callback) {
@@ -59,6 +42,7 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch } = 
   app.get('/', (req, res) => res.json({ service: 'VisioAI API', health: '/api/health', client: 'Deploy client/dist to Vercel.' }));
   const capabilities = () => ({
     vision: Boolean(env.GEMINI_API_KEY),
+    search: Boolean(env.GEMINI_API_KEY),
     voice: Boolean(env.ELEVENLABS_API_KEY && env.ELEVENLABS_AGENT_ID),
     places: Boolean(env.GOOGLE_PLACES_API_KEY),
   });
@@ -72,11 +56,13 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch } = 
 
   app.get('/api/elevenlabs-token', limit(10), async (req, res) => {
     if (!capabilities().voice) throw new ApiError(503, 'VOICE_NOT_CONFIGURED', 'Voice is not configured yet. Add the ElevenLabs key and agent ID on the server.');
+    if (env.ELEVENLABS_AUTO_SYNC !== 'false') await prepareAgent();
+    if (req.aborted || res.destroyed) return;
     const url = new URL('https://api.elevenlabs.io/v1/convai/conversation/token');
     url.searchParams.set('agent_id', env.ELEVENLABS_AGENT_ID);
     const data = await providerJSON(fetchImpl, url, {
       headers: { 'xi-api-key': env.ELEVENLABS_API_KEY }, signal: requestSignal(req, res, 15_000),
-    }, 'Voice');
+    }, 'ElevenLabs voice');
     if (typeof data.token !== 'string' || !data.token) throw new ApiError(502, 'INVALID_TOKEN', 'Voice did not return a session token.');
     res.json({ conversationToken: data.token });
   });
@@ -115,6 +101,23 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch } = 
     res.json({ scene, capturedAt: new Date().toISOString() });
   });
 
+  const searchRequest = z.object({ query: z.string().trim().min(2).max(500) });
+  app.post('/api/search', limit(8), async (req, res) => {
+    const parsed = searchRequest.safeParse(req.body);
+    if (!parsed.success) throw new ApiError(400, 'INVALID_SEARCH', 'Enter a search query of 2 to 500 characters.');
+    if (!capabilities().search) throw new ApiError(503, 'SEARCH_NOT_CONFIGURED', 'Web search needs GEMINI_API_KEY on Render.');
+    const model = env.GEMINI_SEARCH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
+    if (!/^[a-zA-Z0-9._-]+$/.test(model)) throw new ApiError(503, 'INVALID_MODEL', 'The server search model setting is invalid.');
+    const data = await providerJSON(fetchImpl,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+        body: JSON.stringify(buildSearchPayload(parsed.data.query)), signal: requestSignal(req, res),
+      }, 'Web search');
+    const result = readSearchResult(data, parsed.data.query);
+    if (!result) throw new ApiError(502, 'UNGROUNDED_SEARCH', 'Google Search returned no usable sources. Try a more specific search.');
+    res.json(result);
+  });
+
   const placesRequest = z.object({
     query: z.string().trim().min(2).max(200),
     latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180),
@@ -122,7 +125,7 @@ export function createApp({ env = process.env, fetchImpl = globalThis.fetch } = 
   app.post('/api/places', limit(8), async (req, res) => {
     const parsed = placesRequest.safeParse(req.body);
     if (!parsed.success) throw new ApiError(400, 'INVALID_LOCATION', 'A search and valid location are required.');
-    if (!capabilities().places) throw new ApiError(503, 'PLACES_NOT_CONFIGURED', 'Nearby search is not available. I can still help with what your camera sees.');
+    if (!capabilities().places) throw new ApiError(503, 'PLACES_NOT_CONFIGURED', 'Nearby search needs GOOGLE_PLACES_API_KEY on Render. You can still search the web with a city or area.');
     const { query, latitude, longitude } = parsed.data;
     const data = await providerJSON(fetchImpl, 'https://places.googleapis.com/v1/places:searchText', {
       method: 'POST',

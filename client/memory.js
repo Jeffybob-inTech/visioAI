@@ -1,6 +1,6 @@
 // Intentionally RAM-only: pause retains context; reload/forget clears it.
 export function createMemory() {
-  return { goal: null, discoveries: [], transcript: [], places: [] };
+  return { goal: null, discoveries: [], transcript: [], places: [], searches: [] };
 }
 
 export function updateGoal(memory, values) {
@@ -36,6 +36,7 @@ export function snapshot(memory) {
     discoveries: memory.discoveries.slice(-4),
     conversation: memory.transcript.slice(-12),
     places: memory.places,
+    searches: memory.searches.slice(-2),
     note: 'Observations are historical. Inspect again before making claims about the current position or scene.',
   };
 }
