@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f3f3e9" />
+  <meta name="description" content="An eyes-free assistant. Tell VisioAI your goal, point your camera, and hear what matters next." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>VisioAI — What are we doing?</title>
+</head>
+<body>
+  <a class="skip-link" href="#toggle-assistant">Skip to assistant</a>
+  <div class="app-shell">
+    <header class="header">
+      <a class="brand" href="/" aria-label="VisioAI home">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M4 20s6-10 16-10 16 10 16 10-6 10-16 10S4 20 4 20Z"/><circle cx="20" cy="20" r="5"/></svg>
+        <span>visio<span class="brand-ai">AI</span></span>
+      </a>
+      <span class="header-note">A different way to see.</span>
+      <span id="connection" class="connection"><span class="status-dot" aria-hidden="true"></span><span id="connection-label">Getting ready</span></span>
+    </header>
+
+    <main>
+      <div class="intro">
+        <p class="eyebrow">YOUR WORLD. YOUR NEXT STEP.</p>
+        <h1>What are we doing?</h1>
+        <p>Tell me your goal. Point your camera. I’ll help with what matters.</p>
+      </div>
+
+      <div class="workspace">
+        <section class="camera-section" aria-label="Camera and assistant controls">
+          <div class="viewer" id="viewer">
+            <video id="camera" autoplay playsinline muted aria-label="Live rear camera preview"></video>
+            <div class="camera-shade" aria-hidden="true"></div>
+            <div class="viewer-top"><span class="view-label">LIVE VIEW</span><span id="camera-state">Camera off</span></div>
+            <div class="viewfinder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="camera-placeholder" id="camera-placeholder">
+              <div class="lens-mark" aria-hidden="true"><span></span></div>
+              <p>Your perspective.<br>A little more possibility.</p>
+              <span>The camera starts when you do.</span>
+            </div>
+            <div class="viewer-bottom">
+              <div class="assistant-state"><span class="pulse" aria-hidden="true"></span><span id="status" role="status" aria-live="polite">Ready when you are</span><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+              <p id="caption" class="caption">You don’t need to watch the screen.</p>
+            </div>
+          </div>
+
+          <button class="primary-button" id="toggle-assistant" type="button">
+            <svg id="start-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg>
+            <span id="toggle-label">Start VisioAI</span><span class="button-arrow" aria-hidden="true">↗</span>
+          </button>
+          <p class="permission-note" id="permission-note">Allow camera and microphone once, then just talk.</p>
+          <div id="error-box" class="error-box" role="alert" hidden><p id="error-message"></p><button id="dismiss-error" type="button">Dismiss</button></div>
+          <div class="quick-controls" id="quick-controls" hidden>
+            <button id="look-button" type="button">Look again</button>
+            <button id="mute-button" type="button" aria-pressed="false">Mute mic</button>
+          </div>
+        </section>
+
+        <aside class="companion" aria-label="Goal and conversation">
+          <section class="goal-card">
+            <div class="section-label"><span class="tiny-star" aria-hidden="true">✳</span><h2>The goal comes first.</h2></div>
+            <p id="goal-text">What would you like a hand with?</p>
+            <p id="goal-help" class="muted">I’ll keep it in mind as we go.</p>
+          </section>
+          <section class="ideas" id="ideas" aria-label="Things to ask">
+            <p class="eyebrow">TRY SAYING</p>
+            <p>“I want something spicy<br>for under twenty dollars.”</p>
+            <div class="idea-divider"></div>
+            <p>“What does this sign say?”</p>
+            <div class="idea-divider"></div>
+            <p>“Help me understand this form.”</p>
+          </section>
+          <form id="message-form" class="message-form" hidden>
+            <label for="message-input">Or type a message</label>
+            <div class="message-row"><input id="message-input" maxlength="1000" autocomplete="off" placeholder="What would you like to know?" /><button type="submit" aria-label="Send message">↑</button></div>
+          </form>
+          <details id="conversation-details" class="conversation-details">
+            <summary>Conversation <span id="message-count">0</span></summary>
+            <ol id="transcript" class="transcript" aria-label="Conversation history"></ol>
+            <p id="empty-transcript" class="muted">Our conversation will appear here.</p>
+          </details>
+          <section id="places-section" class="places-section" hidden aria-label="Nearby places">
+            <h2>Nearby places</h2><ul id="places-list"></ul><span class="maps-attribution">Google Maps</span>
+          </section>
+          <div class="session-controls">
+            <button id="shake-button" type="button" aria-pressed="false">Enable shake to wake</button>
+            <p id="shake-help">Optional. Works while this page is open and your phone is awake.</p>
+            <button id="forget-button" class="text-button" type="button" disabled>Forget this session</button>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <footer><span class="footer-mark" aria-hidden="true">✳</span><p>Camera frames are sent only when needed. Audio goes to the voice service.<br>Session memory stays in this tab. <a href="#privacy-dialog" id="privacy-link">About your data</a></p><span class="footer-end">SEE WHAT MATTERS.</span></footer>
+  </div>
+  <dialog id="privacy-dialog" aria-labelledby="privacy-title">
+    <h2 id="privacy-title">About your data</h2>
+    <p>Your microphone sends audio to ElevenLabs while the assistant is active. When it needs to look, a camera frame and your goal go through our server to Google Gemini. Nearby search shares location with Google only when you ask to find a place and grant permission.</p>
+    <p>This app keeps goals and conversation context in this tab’s memory and does not save images, audio, or transcripts on its server. Pause keeps that context; “Forget this session” clears it here. Provider retention follows your service configuration and their policies.</p>
+    <p>Camera guidance is for framing objects and reading information. It is not a mobility or hazard-detection aid.</p>
+    <form method="dialog"><button class="primary-button">Got it</button></form>
+  </dialog>
+  <script type="module" src="/index.js"></script>
+</body>
+</html>

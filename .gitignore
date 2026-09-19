@@ -1,0 +1,11 @@
+node_modules/
+client/dist/
+.env
+.env.*
+!.env.example
+!.env.local.example
+client/.env.local
+.vercel/
+.agent-setup.json
+*.log
+.DS_Store
