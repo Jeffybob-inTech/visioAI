@@ -62,7 +62,7 @@ Import the **same GitHub repository**:
 | Install Command | `npm ci` |
 | Build Command | `npm run build` |
 | Output Directory | `client/dist` |
-| Environment Variable | `VITE_API_BASE_URL=https://YOUR-SERVICE.onrender.com` |
+| Environment Variable | `VITE_API_BASE_URL=https://visioai-xqse.onrender.com` |
 
 `vercel.json` supplies the build settings. The API base is the Render origin with **no `/api` suffix**. Set it for every Vercel environment you use. It is baked into the client at build time; **redeploy Vercel after changing it**.
 

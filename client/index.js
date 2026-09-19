@@ -2,8 +2,10 @@ import { Conversation } from '@elevenlabs/client';
 import { createMemory, updateGoal, rememberScene, rememberMessage, snapshot } from './memory.js';
 import './style.css';
 
+const VITE_API_BASE_URL = "https://visioai-xqse.onrender.com";
+
 const $ = id => document.getElementById(id);
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const API_BASE = (VITE_API_BASE_URL || '').replace(/\/+$/, '');
 const state = {
   active: false, starting: false, stopping: false, epoch: 0,
   cameraStream: null, conversation: null, scanPromise: null,
